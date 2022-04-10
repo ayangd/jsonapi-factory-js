@@ -1,11 +1,14 @@
-export interface SerializerTypeAttributes {}
-
-export interface SerializerTypeRelationships {}
-
 export interface SerializerType {
+    id: string;
     type: string;
+    attributes: string[];
+    relationships: string[];
 }
 
 export class SerializerSpecification {
-    constructor() {}
+    types: SerializerType[];
+
+    constructor(types: SerializerType[]) {
+        this.types = types;
+    }
 }

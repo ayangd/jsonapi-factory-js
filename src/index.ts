@@ -1,1 +1,2 @@
-export * from './jsonapi-test';
+export * from './SerializerFactory';
+export * from './SerializerSpecification';
