@@ -22,7 +22,7 @@ export interface ResourceObject {
 }
 
 export interface JSONObject {
-    data: ResourceObject | ResourceObject[];
+    data: ResourceObject | ResourceObject[] | null;
     included?: ResourceObject[];
 }
 
@@ -36,14 +36,12 @@ export interface RelationshipObject {
 }
 
 export function createSerializer(specs: SerializerSpecification) {
-    const serializeTypeMap: { [key: string]: SerializerType } = {};
-    for (let type of specs.types) {
-        serializeTypeMap[type.type] = type;
-    }
+    const serializeTypeMap: { [key: string]: SerializerType } = _.fromPairs(
+        specs.types.map((type) => [type.type, type])
+    );
 
-    function isSerializableObject(obj: GenericObject): boolean {
-        return _.has(obj, 'id') && _.has(obj, 'type');
-    }
+    const isSerializableObject = (obj: GenericObject) =>
+        _.has(obj, 'id') && _.has(obj, 'type');
 
     function singleSerialize(
         input: GenericObject
@@ -80,6 +78,21 @@ export function createSerializer(specs: SerializerSpecification) {
         if (type.relationships.length !== 0) {
             result.relationships = _.fromPairs(
                 type.relationships.map((relationship) => {
+                    if (_.isArray(checkedInput[relationship])) {
+                        let relationshipArray = checkedInput[
+                            relationship
+                        ] as SerializableObject[];
+                        const data = {
+                            data: relationshipArray.map((d) => ({
+                                id: d.id.toString(),
+                                type: d.type,
+                            })),
+                        };
+                        for (let rel of relationshipArray) {
+                            resultRelationshipObjects.push(rel);
+                        }
+                        return [relationship, data];
+                    }
                     const data = {
                         data: {
                             id: checkedInput[relationship].id.toString(),
@@ -129,7 +142,10 @@ export function createSerializer(specs: SerializerSpecification) {
     }
 
     return {
-        serialize(input: GenericObject | GenericObject[]): JSONObject {
+        serialize(input: GenericObject | GenericObject[] | null): JSONObject {
+            if (input === null) {
+                return { data: null };
+            }
             return collectSerializables(input);
         },
 

@@ -5,10 +5,6 @@ export interface SerializerType {
     relationships: string[];
 }
 
-export class SerializerSpecification {
+export interface SerializerSpecification {
     types: SerializerType[];
-
-    constructor(types: SerializerType[]) {
-        this.types = types;
-    }
 }
